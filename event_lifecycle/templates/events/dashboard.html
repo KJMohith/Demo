@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="row g-3 mb-4">
-  <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Total Users</small><h3 id="count-participants">0</h3></div></div></div>
+  <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Total Students</small><h3 id="count-participants">0</h3></div></div></div>
   <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Total Events</small><h3 id="count-events">0</h3></div></div></div>
   <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Attendance</small><h3 id="count-attended">0</h3></div></div></div>
   <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Feedback</small><h3 id="count-feedback">0</h3></div></div></div>
@@ -39,9 +39,12 @@
         <h6>Events</h6>
         <ul id="event-list" class="list-group list-group-flush">
           {% for event in events %}
-          <li class="list-group-item px-0">
-            <strong>{{ event.title }}</strong><br>
-            <small class="text-muted">{{ event.event_date }} — {{ event.description|default:'No description' }}</small>
+          <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-2" data-event-id="{{ event.id }}">
+            <div>
+              <strong>{{ event.title }}</strong><br>
+              <small class="text-muted">{{ event.event_date }} — {{ event.description|default:'No description' }}</small>
+            </div>
+            <button class="btn btn-sm btn-outline-danger delete-event" data-url="{% url 'delete_event' event.id %}">Delete</button>
           </li>
           {% empty %}
           <li class="list-group-item px-0 text-muted">No events added.</li>

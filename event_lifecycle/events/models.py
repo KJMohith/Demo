@@ -58,4 +58,4 @@ class Participant(models.Model):
         super().save(*args, **kwargs)
 
     def is_eligible(self):
-        return self.attendance and self.feedback_given
+        return self.attendance and self.feedback_given and self.marks is not None

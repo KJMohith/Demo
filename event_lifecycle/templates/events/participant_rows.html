@@ -23,6 +23,7 @@
     </button>
     <a class="btn btn-sm btn-outline-secondary" href="{% url 'feedback' participant.pk %}">Feedback</a>
     <a class="btn btn-sm btn-success" href="{% url 'certificate' participant.certificate_hash %}">PDF</a>
+    <button class="btn btn-sm btn-outline-danger delete-student" data-url="{% url 'delete_participant' participant.pk %}">Delete</button>
   </td>
   <td>
     <img src="data:image/png;base64,{{ participant.qr_data }}" alt="QR" width="62" height="62">

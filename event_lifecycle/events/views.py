@@ -88,7 +88,31 @@ def add_event(request):
         return JsonResponse({'errors': form.errors}, status=400)
 
     event = form.save()
-    return JsonResponse({'message': 'Event added successfully.', 'event': {'title': event.title, 'event_date': str(event.event_date), 'description': event.description or 'No description'}})
+    return JsonResponse(
+        {
+            'message': 'Event added successfully.',
+            'event': {
+                'id': event.id,
+                'title': event.title,
+                'event_date': str(event.event_date),
+                'description': event.description or 'No description',
+            },
+        }
+    )
+
+
+@require_POST
+def delete_participant(request, pk):
+    participant = get_object_or_404(Participant, pk=pk)
+    participant.delete()
+    return JsonResponse({'message': 'Student deleted successfully.'})
+
+
+@require_POST
+def delete_event(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    event.delete()
+    return JsonResponse({'message': 'Event deleted successfully.'})
 
 
 @require_POST
