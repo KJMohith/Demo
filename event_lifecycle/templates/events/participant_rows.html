@@ -1,34 +1,97 @@
 {% for participant in participants %}
 <tr>
   <td>
-    <div class="fw-semibold">{{ participant.name }}</div>
-    <small class="text-muted">{{ participant.email }}</small>
+    <div style="font-weight:600;font-size:.85rem;">{{ participant.name }}</div>
+    <div style="font-size:.75rem;color:var(--ink-3);">{{ participant.email }}</div>
   </td>
-  <td>{{ participant.event.title|default:'Not assigned' }}</td>
-  <td>{{ participant.transaction_id }}</td>
-  <td>{% if participant.attendance %}✅{% else %}❌{% endif %}</td>
-  <td>{% if participant.feedback_given %}✅{% else %}❌{% endif %}</td>
-  <td style="min-width: 160px;">
-    <form class="marks-form d-flex gap-2" data-url="{% url 'update_marks' participant.pk %}">
-      <input type="number" name="marks" min="0" max="100" class="form-control form-control-sm" value="{{ participant.marks|default_if_none:'' }}" placeholder="0-100">
-      <button type="submit" class="btn btn-sm btn-warning">Save</button>
+  <td>
+    <span style="font-size:.82rem;font-weight:500;">{{ participant.event.title|default:'—' }}</span>
+  </td>
+  <td>
+    <code style="font-size:.75rem;background:#f0f2fa;padding:.2rem .5rem;border-radius:6px;color:var(--accent);">{{ participant.transaction_id }}</code>
+  </td>
+  <td>
+    {% if participant.attendance %}
+      <span class="badge-yes"><i class="bi bi-check-circle-fill"></i> Present</span>
+    {% else %}
+      <span class="badge-no"><i class="bi bi-x-circle-fill"></i> Absent</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if participant.feedback_given %}
+      <span class="badge-yes"><i class="bi bi-check-circle-fill"></i> Done</span>
+    {% else %}
+      <span class="badge-no"><i class="bi bi-x-circle-fill"></i> Pending</span>
+    {% endif %}
+  </td>
+  <td style="min-width:150px;">
+    <form class="marks-form d-flex gap-1" data-url="{% url 'update_marks' participant.pk %}">
+      <input type="number" name="marks" min="0" max="100"
+             class="form-control form-control-sm"
+             value="{{ participant.marks|default_if_none:'' }}"
+             placeholder="0–100"
+             style="max-width:80px;">
+      <button type="submit" class="btn btn-sm btn-warning">
+        <i class="bi bi-floppy-fill"></i>
+      </button>
     </form>
+    {% if participant.marks is not None %}
+      <div style="font-size:.7rem;color:var(--ink-3);margin-top:.2rem;">{{ participant.marks }}/100</div>
+    {% endif %}
   </td>
   <td>
-    <button
-      class="btn btn-sm btn-outline-primary attendance-toggle"
-      data-url="{% url 'toggle_attendance' participant.pk %}"
-    >
-      Toggle
-    </button>
-    <a class="btn btn-sm btn-outline-secondary" href="{% url 'feedback' participant.pk %}">Feedback</a>
-    <a class="btn btn-sm btn-success" href="{% url 'certificate' participant.certificate_hash %}">PDF</a>
-    <button class="btn btn-sm btn-outline-danger delete-student" data-url="{% url 'delete_participant' participant.pk %}">Delete</button>
+    <div class="d-flex flex-wrap gap-1">
+      <!-- Toggle Attendance -->
+      <button class="btn btn-sm btn-outline-primary attendance-toggle"
+              data-url="{% url 'toggle_attendance' participant.pk %}"
+              title="Toggle attendance">
+        <i class="bi bi-person-check"></i>
+      </button>
+
+      <!-- Feedback -->
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'feedback' participant.pk %}" title="Give feedback">
+        <i class="bi bi-chat-left-text"></i>
+      </a>
+
+      <!-- Certificate — only if eligible (attendance required at minimum) -->
+      {% if participant.is_eligible %}
+        <a class="btn btn-sm btn-cert-eligible"
+           href="{% url 'certificate' participant.certificate_hash %}"
+           title="Download Certificate (Eligible ✓)"
+           target="_blank">
+          <i class="bi bi-award-fill me-1"></i>Cert
+        </a>
+      {% elif participant.attendance %}
+        <span class="btn btn-sm btn-cert-locked"
+              title="Complete feedback &amp; marks to unlock">
+          <i class="bi bi-lock-fill me-1"></i>Cert
+        </span>
+      {% else %}
+        <span class="btn btn-sm btn-cert-locked"
+              title="Mark attendance first to unlock certificate">
+          <i class="bi bi-lock-fill me-1"></i>Cert
+        </span>
+      {% endif %}
+
+      <!-- Delete -->
+      <button class="btn btn-sm btn-outline-danger delete-student"
+              data-url="{% url 'delete_participant' participant.pk %}"
+              title="Delete participant">
+        <i class="bi bi-trash3"></i>
+      </button>
+    </div>
   </td>
   <td>
-    <img src="data:image/png;base64,{{ participant.qr_data }}" alt="QR" width="62" height="62">
+    <img src="data:image/png;base64,{{ participant.qr_data }}"
+         alt="QR for {{ participant.name }}"
+         width="56" height="56" class="qr-thumb">
   </td>
 </tr>
 {% empty %}
-<tr><td colspan="8" class="text-center">No participants found.</td></tr>
+<tr>
+  <td colspan="8" style="text-align:center;padding:2rem;color:var(--ink-3);">
+    <i class="bi bi-inbox" style="font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>
+    No participants registered yet.
+  </td>
+</tr>
 {% endfor %}

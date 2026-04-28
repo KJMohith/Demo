@@ -1,68 +1,145 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Total Students</small><h3 id="count-participants">0</h3></div></div></div>
-  <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Total Events</small><h3 id="count-events">0</h3></div></div></div>
-  <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Attendance</small><h3 id="count-attended">0</h3></div></div></div>
-  <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body"><small>Feedback</small><h3 id="count-feedback">0</h3></div></div></div>
+<!-- Page Header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--ink);margin:0;">Dashboard</h1>
+    <p style="color:var(--ink-3);font-size:.875rem;margin:.2rem 0 0;">Manage events, participants &amp; certificates</p>
+  </div>
 </div>
 
-<div class="row g-4">
-  <div class="col-lg-4">
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <h5>Add Student</h5>
-        <form id="participant-form" enctype="multipart/form-data">
-          {% csrf_token %}
-          {{ participant_form.as_p }}
-          <button class="btn btn-primary w-100" type="submit">Add Student</button>
-        </form>
-        <div id="participant-errors" class="text-danger small mt-2"></div>
-      </div>
-    </div>
-
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5>Add Event</h5>
-        <form id="event-form">
-          {% csrf_token %}
-          {{ event_form.as_p }}
-          <button class="btn btn-dark w-100" type="submit">Add Event</button>
-        </form>
-        <div id="event-errors" class="text-danger small mt-2"></div>
-      </div>
-    </div>
-
-    <div class="card shadow-sm mt-4">
-      <div class="card-body">
-        <h6>Events</h6>
-        <ul id="event-list" class="list-group list-group-flush">
-          {% for event in events %}
-          <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-2" data-event-id="{{ event.id }}">
-            <div>
-              <strong>{{ event.title }}</strong><br>
-              <small class="text-muted">{{ event.event_date }} — {{ event.description|default:'No description' }}</small>
-            </div>
-            <button class="btn btn-sm btn-outline-danger delete-event" data-url="{% url 'delete_event' event.id %}">Delete</button>
-          </li>
-          {% empty %}
-          <li class="list-group-item px-0 text-muted">No events added.</li>
-          {% endfor %}
-        </ul>
-      </div>
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card s1">
+      <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+      <div class="stat-value" id="count-participants">—</div>
+      <div class="stat-label">Total Students</div>
     </div>
   </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card s2">
+      <div class="stat-icon"><i class="bi bi-calendar-event-fill"></i></div>
+      <div class="stat-value" id="count-events">—</div>
+      <div class="stat-label">Total Events</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card s3">
+      <div class="stat-icon"><i class="bi bi-person-check-fill"></i></div>
+      <div class="stat-value" id="count-attended">—</div>
+      <div class="stat-label">Attended</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card s4">
+      <div class="stat-icon"><i class="bi bi-chat-square-text-fill"></i></div>
+      <div class="stat-value" id="count-feedback">—</div>
+      <div class="stat-label">Feedback Given</div>
+    </div>
+  </div>
+</div>
 
+<!-- Main Content -->
+<div class="row g-4">
+  <!-- Left Sidebar -->
+  <div class="col-lg-4">
+
+    <!-- Add Student -->
+    <div class="card mb-4">
+      <div class="card-header-accent">
+        <i class="bi bi-person-plus-fill"></i> Add Student
+      </div>
+      <div class="card-body p-4">
+        <form id="participant-form" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% for field in participant_form %}
+          <div class="mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button class="btn btn-primary w-100 mt-1" type="submit">
+            <i class="bi bi-plus-circle me-1"></i> Add Student
+          </button>
+        </form>
+        <div id="participant-errors" class="text-danger small mt-2" style="font-size:.8rem;"></div>
+      </div>
+    </div>
+
+    <!-- Add Event -->
+    <div class="card mb-4">
+      <div class="card-header-accent">
+        <i class="bi bi-calendar-plus-fill"></i> Add Event
+      </div>
+      <div class="card-body p-4">
+        <form id="event-form">
+          {% csrf_token %}
+          {% for field in event_form %}
+          <div class="mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+          </div>
+          {% endfor %}
+          <button class="btn btn-dark w-100 mt-1" type="submit">
+            <i class="bi bi-plus-circle me-1"></i> Add Event
+          </button>
+        </form>
+        <div id="event-errors" class="text-danger small mt-2" style="font-size:.8rem;"></div>
+      </div>
+    </div>
+
+    <!-- Event List -->
+    <div class="card">
+      <div class="card-header-accent">
+        <i class="bi bi-calendar3"></i> Events
+      </div>
+      <div class="card-body p-3">
+        <div id="event-list">
+          {% for event in events %}
+          <div class="event-item" data-event-id="{{ event.id }}">
+            <div style="display:flex;gap:.6rem;align-items:flex-start;flex:1;min-width:0;">
+              <span class="event-dot" style="margin-top:6px;"></span>
+              <div style="min-width:0;">
+                <div style="font-weight:700;font-size:.85rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ event.title }}</div>
+                <div style="font-size:.75rem;color:var(--ink-3);margin-top:1px;">{{ event.event_date }} · {{ event.description|default:'No description'|truncatechars:40 }}</div>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger delete-event flex-shrink-0" data-url="{% url 'delete_event' event.id %}">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </div>
+          {% empty %}
+          <p style="color:var(--ink-3);font-size:.85rem;text-align:center;padding:.5rem 0;">No events yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Participants Table -->
   <div class="col-lg-8">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="mb-3">Registered Students</h5>
+    <div class="card">
+      <div class="card-header-accent d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-table me-1"></i> Registered Students</span>
+        <span style="font-size:.75rem;opacity:.7;font-weight:400;" id="participant-count-badge"></span>
+      </div>
+      <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table align-middle table-hover">
+          <table class="table mb-0 align-middle">
             <thead>
               <tr>
-                <th>Student</th><th>Event</th><th>Transaction ID</th><th>Attendance</th><th>Feedback</th><th>Marks</th><th>Actions</th><th>QR</th>
+                <th>Student</th>
+                <th>Event</th>
+                <th>Transaction</th>
+                <th>Attendance</th>
+                <th>Feedback</th>
+                <th>Marks</th>
+                <th>Actions</th>
+                <th>QR</th>
               </tr>
             </thead>
             <tbody id="participant-table-body">

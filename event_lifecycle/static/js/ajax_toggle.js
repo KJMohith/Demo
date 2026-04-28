@@ -1,156 +1,172 @@
+// ── CSRF ──────────────────────────────────────────────────────────────────────
 function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (const raw of cookies) {
-      const cookie = raw.trim();
-      if (cookie.startsWith(`${name}=`)) {
-        cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
-        break;
-      }
+  let val = null;
+  if (document.cookie) {
+    for (const raw of document.cookie.split(';')) {
+      const c = raw.trim();
+      if (c.startsWith(name + '=')) { val = decodeURIComponent(c.slice(name.length + 1)); break; }
     }
   }
-  return cookieValue;
+  return val;
 }
-
 const csrfToken = getCookie('csrftoken');
 
+// ── STATS ─────────────────────────────────────────────────────────────────────
 async function fetchStats() {
-  const response = await fetch('/dashboard/stats/');
-  if (!response.ok) return;
-  const data = await response.json();
-  document.getElementById('count-participants').textContent = data.participants;
-  document.getElementById('count-events').textContent = data.events;
-  document.getElementById('count-attended').textContent = data.attended;
-  document.getElementById('count-feedback').textContent = data.feedback;
+  const r = await fetch('/dashboard/stats/');
+  if (!r.ok) return;
+  const d = await r.json();
+  document.getElementById('count-participants').textContent = d.participants;
+  document.getElementById('count-events').textContent = d.events;
+  document.getElementById('count-attended').textContent = d.attended;
+  document.getElementById('count-feedback').textContent = d.feedback;
+  const badge = document.getElementById('participant-count-badge');
+  if (badge) badge.textContent = d.participants + ' registered';
 }
 
+// ── PARTICIPANT ROWS ──────────────────────────────────────────────────────────
 async function fetchParticipantRows() {
-  const response = await fetch('/dashboard/participants/');
-  if (!response.ok) return;
-  const data = await response.json();
-  document.getElementById('participant-table-body').innerHTML = data.html;
+  const r = await fetch('/dashboard/participants/');
+  if (!r.ok) return;
+  const d = await r.json();
+  document.getElementById('participant-table-body').innerHTML = d.html;
 }
 
-function showErrors(targetId, errors) {
-  const target = document.getElementById(targetId);
-  const list = Object.entries(errors).map(([k, v]) => `${k}: ${v.join(', ')}`);
-  target.textContent = list.join(' | ');
+// ── ERRORS ────────────────────────────────────────────────────────────────────
+function showErrors(id, errors) {
+  const el = document.getElementById(id);
+  el.textContent = Object.entries(errors).map(([k, v]) => k + ': ' + v.join(', ')).join(' | ');
 }
 
+// ── ADD STUDENT ───────────────────────────────────────────────────────────────
 const participantForm = document.getElementById('participant-form');
 if (participantForm) {
-  participantForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+  participantForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
     document.getElementById('participant-errors').textContent = '';
-    const formData = new FormData(participantForm);
-    const response = await fetch('/dashboard/add-user/', {
+    const r = await fetch('/dashboard/add-user/', {
       method: 'POST',
-      body: formData,
+      body: new FormData(participantForm),
       headers: { 'X-CSRFToken': csrfToken },
     });
-
-    if (!response.ok) {
-      const data = await response.json();
-      showErrors('participant-errors', data.errors || { error: ['Unable to add user.'] });
+    if (!r.ok) {
+      const d = await r.json();
+      showErrors('participant-errors', d.errors || { error: ['Unable to add student.'] });
+      showToast('Failed to add student', 'error');
       return;
     }
-
     participantForm.reset();
     await fetchParticipantRows();
     await fetchStats();
+    showToast('Student added successfully!');
   });
 }
 
+// ── ADD EVENT ─────────────────────────────────────────────────────────────────
 const eventForm = document.getElementById('event-form');
 if (eventForm) {
-  eventForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+  eventForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
     document.getElementById('event-errors').textContent = '';
-    const formData = new FormData(eventForm);
-    const response = await fetch('/dashboard/add-event/', {
+    const r = await fetch('/dashboard/add-event/', {
       method: 'POST',
-      body: formData,
+      body: new FormData(eventForm),
       headers: { 'X-CSRFToken': csrfToken },
     });
-
-    if (!response.ok) {
-      const data = await response.json();
-      showErrors('event-errors', data.errors || { error: ['Unable to add event.'] });
+    if (!r.ok) {
+      const d = await r.json();
+      showErrors('event-errors', d.errors || { error: ['Unable to add event.'] });
+      showToast('Failed to add event', 'error');
       return;
     }
-
-    const data = await response.json();
+    const d = await r.json();
     eventForm.reset();
-    const li = document.createElement('li');
-    li.className = 'list-group-item px-0 d-flex justify-content-between align-items-start gap-2';
-    li.dataset.eventId = data.event.id;
-    li.innerHTML = `<div><strong>${data.event.title}</strong><br><small class="text-muted">${data.event.event_date} — ${data.event.description}</small></div><button class="btn btn-sm btn-outline-danger delete-event" data-url="/dashboard/delete-event/${data.event.id}/">Delete</button>`;
-    document.getElementById('event-list').prepend(li);
+    const div = document.createElement('div');
+    div.className = 'event-item';
+    div.dataset.eventId = d.event.id;
+    div.innerHTML = `
+      <div style="display:flex;gap:.6rem;align-items:flex-start;flex:1;min-width:0;">
+        <span class="event-dot" style="margin-top:6px;"></span>
+        <div style="min-width:0;">
+          <div style="font-weight:700;font-size:.85rem;color:var(--ink);">${d.event.title}</div>
+          <div style="font-size:.75rem;color:var(--ink-3);margin-top:1px;">${d.event.event_date} · ${d.event.description}</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline-danger delete-event flex-shrink-0"
+              data-url="/dashboard/delete-event/${d.event.id}/">
+        <i class="bi bi-trash3"></i>
+      </button>`;
+    document.getElementById('event-list').prepend(div);
     await fetchStats();
+    showToast('Event "' + d.event.title + '" added!');
   });
 }
 
-document.addEventListener('click', async (event) => {
-  const button = event.target.closest('.attendance-toggle');
-  if (!button) return;
+// ── EVENT DELEGATION ──────────────────────────────────────────────────────────
+document.addEventListener('click', async (e) => {
+  // Toggle attendance
+  const toggleBtn = e.target.closest('.attendance-toggle');
+  if (toggleBtn) {
+    const r = await fetch(toggleBtn.dataset.url, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken },
+    });
+    if (!r.ok) return;
+    const d = await r.json();
+    await fetchParticipantRows();
+    await fetchStats();
+    showToast('Attendance ' + (d.attendance ? 'marked ✓' : 'unmarked'));
+    return;
+  }
 
-  const response = await fetch(button.dataset.url, {
-    method: 'POST',
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRFToken': csrfToken,
-    },
-  });
+  // Delete student
+  const delStudent = e.target.closest('.delete-student');
+  if (delStudent) {
+    if (!confirm('Delete this participant?')) return;
+    const r = await fetch(delStudent.dataset.url, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+    });
+    if (!r.ok) return;
+    await fetchParticipantRows();
+    await fetchStats();
+    showToast('Participant removed.');
+    return;
+  }
 
-  if (!response.ok) return;
-  await fetchParticipantRows();
-  await fetchStats();
+  // Delete event
+  const delEvent = e.target.closest('.delete-event');
+  if (delEvent) {
+    if (!confirm('Delete this event?')) return;
+    const r = await fetch(delEvent.dataset.url, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+    });
+    if (!r.ok) return;
+    delEvent.closest('[data-event-id]')?.remove();
+    await fetchParticipantRows();
+    await fetchStats();
+    showToast('Event deleted.');
+    return;
+  }
 });
 
-document.addEventListener('submit', async (event) => {
-  const form = event.target.closest('.marks-form');
+// ── MARKS ─────────────────────────────────────────────────────────────────────
+document.addEventListener('submit', async (e) => {
+  const form = e.target.closest('.marks-form');
   if (!form) return;
-
-  event.preventDefault();
-  const response = await fetch(form.dataset.url, {
+  e.preventDefault();
+  const r = await fetch(form.dataset.url, {
     method: 'POST',
     body: new FormData(form),
     headers: { 'X-CSRFToken': csrfToken },
   });
-
-  if (!response.ok) return;
-  await fetchParticipantRows();
-
-  await fetchStats();
-});
-
-document.addEventListener('click', async (event) => {
-  const deleteStudentButton = event.target.closest('.delete-student');
-  if (deleteStudentButton) {
-    const response = await fetch(deleteStudentButton.dataset.url, {
-      method: 'POST',
-      headers: { 'X-CSRFToken': csrfToken },
-    });
-    if (!response.ok) return;
-    await fetchParticipantRows();
-    await fetchStats();
-    return;
-  }
-
-  const deleteEventButton = event.target.closest('.delete-event');
-  if (!deleteEventButton) return;
-
-  const response = await fetch(deleteEventButton.dataset.url, {
-    method: 'POST',
-    headers: { 'X-CSRFToken': csrfToken },
-  });
-  if (!response.ok) return;
-  deleteEventButton.closest('li')?.remove();
+  if (!r.ok) { showToast('Failed to save marks', 'error'); return; }
   await fetchParticipantRows();
   await fetchStats();
-
+  showToast('Marks saved!');
 });
 
+// ── INIT ──────────────────────────────────────────────────────────────────────
 fetchStats();
 setInterval(fetchStats, 5000);
