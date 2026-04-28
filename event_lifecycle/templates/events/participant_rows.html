@@ -1,0 +1,26 @@
+{% for participant in participants %}
+<tr>
+  <td>
+    <div class="fw-semibold">{{ participant.name }}</div>
+    <small class="text-muted">{{ participant.email }}</small>
+  </td>
+  <td>{{ participant.transaction_id }}</td>
+  <td>{% if participant.attendance %}✅{% else %}❌{% endif %}</td>
+  <td>{% if participant.feedback_given %}✅{% else %}❌{% endif %}</td>
+  <td>
+    <button
+      class="btn btn-sm btn-outline-primary attendance-toggle"
+      data-url="{% url 'toggle_attendance' participant.pk %}"
+    >
+      Toggle
+    </button>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'feedback' participant.pk %}">Feedback</a>
+    <a class="btn btn-sm btn-success" href="{% url 'certificate' participant.certificate_hash %}">PDF</a>
+  </td>
+  <td>
+    <img src="data:image/png;base64,{{ participant.qr_data }}" alt="QR" width="62" height="62">
+  </td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="text-center">No participants found.</td></tr>
+{% endfor %}
