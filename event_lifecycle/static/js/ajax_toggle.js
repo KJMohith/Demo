@@ -121,6 +121,7 @@ document.addEventListener('submit', async (event) => {
 
   if (!response.ok) return;
   await fetchParticipantRows();
+
   await fetchStats();
 });
 
@@ -148,6 +149,7 @@ document.addEventListener('click', async (event) => {
   deleteEventButton.closest('li')?.remove();
   await fetchParticipantRows();
   await fetchStats();
+
 });
 
 fetchStats();

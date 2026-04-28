@@ -65,6 +65,15 @@ def generate_certificate_pdf(participant):
     pdf.setFillColor(colors.HexColor('#0a8f4f') if participant.marks is not None else colors.HexColor('#d9822b'))
     pdf.setFont('Helvetica-Bold', 16)
     pdf.drawCentredString(width / 2, height - 13.2 * cm, marks_text)
+    pdf.setFont('Helvetica', 14)
+    pdf.drawCentredString(width / 2, height - 12 * cm, f'has successfully completed {event_title}.')
+
+    marks_text = f'Marks: {participant.marks}/100' if participant.marks is not None else 'Marks: Pending'
+    pdf.setFont('Helvetica-Bold', 14)
+    pdf.drawCentredString(width / 2, height - 13.2 * cm, marks_text)
+
+    pdf.setFont('Helvetica-Oblique', 11)
+    pdf.drawCentredString(width / 2, height - 14.6 * cm, f'Certificate Ref: {participant.certificate_hash}')
 
     pdf.setFillColor(colors.HexColor('#4a5d85'))
     pdf.setFont('Helvetica-Oblique', 11)
