@@ -4,9 +4,16 @@
     <div class="fw-semibold">{{ participant.name }}</div>
     <small class="text-muted">{{ participant.email }}</small>
   </td>
+  <td>{{ participant.event.title|default:'Not assigned' }}</td>
   <td>{{ participant.transaction_id }}</td>
   <td>{% if participant.attendance %}✅{% else %}❌{% endif %}</td>
   <td>{% if participant.feedback_given %}✅{% else %}❌{% endif %}</td>
+  <td style="min-width: 160px;">
+    <form class="marks-form d-flex gap-2" data-url="{% url 'update_marks' participant.pk %}">
+      <input type="number" name="marks" min="0" max="100" class="form-control form-control-sm" value="{{ participant.marks|default_if_none:'' }}" placeholder="0-100">
+      <button type="submit" class="btn btn-sm btn-warning">Save</button>
+    </form>
+  </td>
   <td>
     <button
       class="btn btn-sm btn-outline-primary attendance-toggle"
@@ -22,5 +29,5 @@
   </td>
 </tr>
 {% empty %}
-<tr><td colspan="6" class="text-center">No participants found.</td></tr>
+<tr><td colspan="8" class="text-center">No participants found.</td></tr>
 {% endfor %}

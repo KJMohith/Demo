@@ -107,5 +107,20 @@ document.addEventListener('click', async (event) => {
   await fetchStats();
 });
 
+document.addEventListener('submit', async (event) => {
+  const form = event.target.closest('.marks-form');
+  if (!form) return;
+
+  event.preventDefault();
+  const response = await fetch(form.dataset.url, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { 'X-CSRFToken': csrfToken },
+  });
+
+  if (!response.ok) return;
+  await fetchParticipantRows();
+});
+
 fetchStats();
 setInterval(fetchStats, 5000);
