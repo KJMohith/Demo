@@ -83,8 +83,9 @@ if (eventForm) {
     const data = await response.json();
     eventForm.reset();
     const li = document.createElement('li');
-    li.className = 'list-group-item px-0';
-    li.innerHTML = `<strong>${data.event.title}</strong><br><small class="text-muted">${data.event.event_date} — ${data.event.description}</small>`;
+    li.className = 'list-group-item px-0 d-flex justify-content-between align-items-start gap-2';
+    li.dataset.eventId = data.event.id;
+    li.innerHTML = `<div><strong>${data.event.title}</strong><br><small class="text-muted">${data.event.event_date} — ${data.event.description}</small></div><button class="btn btn-sm btn-outline-danger delete-event" data-url="/dashboard/delete-event/${data.event.id}/">Delete</button>`;
     document.getElementById('event-list').prepend(li);
     await fetchStats();
   });
@@ -103,6 +104,48 @@ document.addEventListener('click', async (event) => {
   });
 
   if (!response.ok) return;
+  await fetchParticipantRows();
+  await fetchStats();
+});
+
+document.addEventListener('submit', async (event) => {
+  const form = event.target.closest('.marks-form');
+  if (!form) return;
+
+  event.preventDefault();
+  const response = await fetch(form.dataset.url, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { 'X-CSRFToken': csrfToken },
+  });
+
+  if (!response.ok) return;
+  await fetchParticipantRows();
+  await fetchStats();
+});
+
+document.addEventListener('click', async (event) => {
+  const deleteStudentButton = event.target.closest('.delete-student');
+  if (deleteStudentButton) {
+    const response = await fetch(deleteStudentButton.dataset.url, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+    });
+    if (!response.ok) return;
+    await fetchParticipantRows();
+    await fetchStats();
+    return;
+  }
+
+  const deleteEventButton = event.target.closest('.delete-event');
+  if (!deleteEventButton) return;
+
+  const response = await fetch(deleteEventButton.dataset.url, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrfToken },
+  });
+  if (!response.ok) return;
+  deleteEventButton.closest('li')?.remove();
   await fetchParticipantRows();
   await fetchStats();
 });

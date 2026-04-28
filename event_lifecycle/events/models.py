@@ -20,6 +20,7 @@ class Event(models.Model):
 
 
 class Participant(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants', null=True)
     name = models.CharField(max_length=150)
     email = models.EmailField()
     transaction_id = models.CharField(max_length=100, unique=True)
@@ -35,6 +36,11 @@ class Participant(models.Model):
         blank=True,
         validators=[MinValueValidator(1), MaxValueValidator(5)],
     )
+    marks = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
     certificate_hash = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -42,7 +48,7 @@ class Participant(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'{self.name} ({self.transaction_id})'
+        return f'{self.name} - {self.event} ({self.transaction_id})'
 
     def save(self, *args, **kwargs):
         if self.photo and hasattr(self.photo, 'read'):
@@ -52,4 +58,4 @@ class Participant(models.Model):
         super().save(*args, **kwargs)
 
     def is_eligible(self):
-        return self.attendance and self.feedback_given
+        return self.attendance and self.feedback_given and self.marks is not None

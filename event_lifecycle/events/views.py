@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .forms import EventForm, FeedbackForm, RegistrationForm
+from .forms import EventForm, FeedbackForm, MarksForm, RegistrationForm
 from .models import Event, Participant
 from .utils import generate_certificate_pdf, generate_qr_data
 
@@ -60,6 +60,17 @@ def dashboard(request):
 
 
 @require_POST
+def update_marks(request, pk):
+    participant = get_object_or_404(Participant, pk=pk)
+    form = MarksForm(request.POST, instance=participant)
+    if not form.is_valid():
+        return JsonResponse({'errors': form.errors}, status=400)
+
+    form.save(update_fields=['marks'])
+    return JsonResponse({'message': 'Marks updated successfully.'})
+
+
+@require_POST
 def add_participant(request):
     form = RegistrationForm(request.POST, request.FILES)
     if not form.is_valid():
@@ -77,7 +88,31 @@ def add_event(request):
         return JsonResponse({'errors': form.errors}, status=400)
 
     event = form.save()
-    return JsonResponse({'message': 'Event added successfully.', 'event': {'title': event.title, 'event_date': str(event.event_date), 'description': event.description or 'No description'}})
+    return JsonResponse(
+        {
+            'message': 'Event added successfully.',
+            'event': {
+                'id': event.id,
+                'title': event.title,
+                'event_date': str(event.event_date),
+                'description': event.description or 'No description',
+            },
+        }
+    )
+
+
+@require_POST
+def delete_participant(request, pk):
+    participant = get_object_or_404(Participant, pk=pk)
+    participant.delete()
+    return JsonResponse({'message': 'Student deleted successfully.'})
+
+
+@require_POST
+def delete_event(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    event.delete()
+    return JsonResponse({'message': 'Event deleted successfully.'})
 
 
 @require_POST
