@@ -9,6 +9,7 @@ urlpatterns = [
     path('dashboard/add-event/', views.add_event, name='add_event'),
     path('dashboard/stats/', views.dashboard_stats, name='dashboard_stats'),
     path('dashboard/participants/', views.participant_rows, name='participant_rows'),
+    path('marks/<int:pk>/update/', views.update_marks, name='update_marks'),
     path('attendance/<int:pk>/toggle/', views.toggle_attendance, name='toggle_attendance'),
     path('feedback/<int:pk>/', views.feedback, name='feedback'),
     path('certificate/<uuid:hash>/', views.certificate, name='certificate'),
