@@ -5,8 +5,8 @@
   <div class="col-lg-6 col-md-8">
     <div class="card shadow-sm">
       <div class="card-body">
-        <h1 class="h4 mb-3">Quick Registration</h1>
-        <p class="text-muted">Upload receipt (jpg/png/pdf, <2MB) and user photo (jpg/png, <2MB).</p>
+        <h1 class="h4 mb-3">Student Registration</h1>
+        <p class="text-muted">Select an event, then upload receipt (jpg/png/pdf, &lt;2MB) and photo (jpg/png, &lt;2MB). Marks can be entered later from the dashboard.</p>
         <form method="post" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           {{ form.as_p }}

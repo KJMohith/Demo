@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .forms import EventForm, FeedbackForm, RegistrationForm
+from .forms import EventForm, FeedbackForm, MarksForm, RegistrationForm
 from .models import Event, Participant
 from .utils import generate_certificate_pdf, generate_qr_data
 
@@ -57,6 +57,17 @@ def dashboard(request):
         'event_form': event_form,
     }
     return render(request, 'events/dashboard.html', context)
+
+
+@require_POST
+def update_marks(request, pk):
+    participant = get_object_or_404(Participant, pk=pk)
+    form = MarksForm(request.POST, instance=participant)
+    if not form.is_valid():
+        return JsonResponse({'errors': form.errors}, status=400)
+
+    form.save(update_fields=['marks'])
+    return JsonResponse({'message': 'Marks updated successfully.'})
 
 
 @require_POST

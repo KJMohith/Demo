@@ -34,11 +34,17 @@ def generate_certificate_pdf(participant):
     pdf.setFont('Helvetica-Bold', 22)
     pdf.drawCentredString(width / 2, height - 10 * cm, participant.name)
 
+    event_title = participant.event.title if participant.event else 'the selected event'
+
     pdf.setFont('Helvetica', 14)
-    pdf.drawCentredString(width / 2, height - 12 * cm, 'has successfully completed the Event Lifecycle Workshop.')
+    pdf.drawCentredString(width / 2, height - 12 * cm, f'has successfully completed {event_title}.')
+
+    marks_text = f'Marks: {participant.marks}/100' if participant.marks is not None else 'Marks: Pending'
+    pdf.setFont('Helvetica-Bold', 14)
+    pdf.drawCentredString(width / 2, height - 13.2 * cm, marks_text)
 
     pdf.setFont('Helvetica-Oblique', 11)
-    pdf.drawCentredString(width / 2, height - 14.5 * cm, f'Certificate Ref: {participant.certificate_hash}')
+    pdf.drawCentredString(width / 2, height - 14.6 * cm, f'Certificate Ref: {participant.certificate_hash}')
 
     pdf.rect(2 * cm, 2 * cm, width - 4 * cm, height - 4 * cm)
 

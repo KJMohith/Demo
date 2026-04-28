@@ -12,11 +12,11 @@
   <div class="col-lg-4">
     <div class="card shadow-sm mb-4">
       <div class="card-body">
-        <h5>Add User</h5>
+        <h5>Add Student</h5>
         <form id="participant-form" enctype="multipart/form-data">
           {% csrf_token %}
           {{ participant_form.as_p }}
-          <button class="btn btn-primary w-100" type="submit">Add User</button>
+          <button class="btn btn-primary w-100" type="submit">Add Student</button>
         </form>
         <div id="participant-errors" class="text-danger small mt-2"></div>
       </div>
@@ -54,12 +54,12 @@
   <div class="col-lg-8">
     <div class="card shadow-sm">
       <div class="card-body">
-        <h5 class="mb-3">Registered Users</h5>
+        <h5 class="mb-3">Registered Students</h5>
         <div class="table-responsive">
-          <table class="table align-middle">
+          <table class="table align-middle table-hover">
             <thead>
               <tr>
-                <th>User</th><th>Transaction ID</th><th>Attendance</th><th>Feedback</th><th>Actions</th><th>QR</th>
+                <th>Student</th><th>Event</th><th>Transaction ID</th><th>Attendance</th><th>Feedback</th><th>Marks</th><th>Actions</th><th>QR</th>
               </tr>
             </thead>
             <tbody id="participant-table-body">
