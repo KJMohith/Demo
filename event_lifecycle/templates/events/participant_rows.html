@@ -1,97 +1,123 @@
 {% for participant in participants %}
 <tr>
+  <!-- Student -->
   <td>
-    <div style="font-weight:600;font-size:.85rem;">{{ participant.name }}</div>
-    <div style="font-size:.75rem;color:var(--ink-3);">{{ participant.email }}</div>
+    <div class="student-cell">
+      <div class="student-avatar">{{ participant.name|first|upper }}</div>
+      <div>
+        <div class="student-name">{{ participant.name }}</div>
+        <div class="student-email">{{ participant.email }}</div>
+      </div>
+    </div>
   </td>
-  <td>
-    <span style="font-size:.82rem;font-weight:500;">{{ participant.event.title|default:'—' }}</span>
+
+  <!-- Event -->
+  <td style="font-weight:600;color:var(--text);font-size:.83rem;">
+    {{ participant.event.title|default:'—' }}
   </td>
-  <td>
-    <code style="font-size:.75rem;background:#f0f2fa;padding:.2rem .5rem;border-radius:6px;color:var(--accent);">{{ participant.transaction_id }}</code>
-  </td>
+
+  <!-- Transaction -->
+  <td><span class="tid-pill">{{ participant.transaction_id }}</span></td>
+
+  <!-- Attendance -->
   <td>
     {% if participant.attendance %}
-      <span class="badge-yes"><i class="bi bi-check-circle-fill"></i> Present</span>
+      <span class="badge badge-present"><i class="bi bi-check-circle-fill"></i> Present</span>
     {% else %}
-      <span class="badge-no"><i class="bi bi-x-circle-fill"></i> Absent</span>
+      <span class="badge badge-absent"><i class="bi bi-x-circle-fill"></i> Absent</span>
     {% endif %}
   </td>
+
+  <!-- Feedback -->
   <td>
     {% if participant.feedback_given %}
-      <span class="badge-yes"><i class="bi bi-check-circle-fill"></i> Done</span>
+      <span class="badge badge-done"><i class="bi bi-check-circle-fill"></i> Done</span>
     {% else %}
-      <span class="badge-no"><i class="bi bi-x-circle-fill"></i> Pending</span>
+      <span class="badge badge-pending"><i class="bi bi-clock-fill"></i> Pending</span>
     {% endif %}
   </td>
-  <td style="min-width:150px;">
-    <form class="marks-form d-flex gap-1" data-url="{% url 'update_marks' participant.pk %}">
-      <input type="number" name="marks" min="0" max="100"
-             class="form-control form-control-sm"
-             value="{{ participant.marks|default_if_none:'' }}"
-             placeholder="0–100"
-             style="max-width:80px;">
-      <button type="submit" class="btn btn-sm btn-warning">
-        <i class="bi bi-floppy-fill"></i>
-      </button>
+
+  <!-- Marks — form posts to correct URL, JS intercepts -->
+  <td style="min-width:155px;">
+    <form class="marks-form" data-url="{% url 'update_marks' participant.pk %}">
+      {% csrf_token %}
+      <div class="marks-row">
+        <input type="number" name="marks" min="0" max="100"
+               value="{{ participant.marks|default_if_none:'' }}"
+               placeholder="0–100"
+               class="form-control"
+               style="width:72px;text-align:center;font-weight:700;">
+        <button type="submit" class="btn btn-icon btn-amber" title="Save marks">
+          <i class="bi bi-floppy-fill"></i>
+        </button>
+      </div>
+      {% if participant.marks is not None %}
+      <div class="marks-bar-wrap">
+        <div class="marks-bar" style="width:{{ participant.marks }}%;">&nbsp;</div>
+      </div>
+      <div class="marks-display">{{ participant.marks }}/100</div>
+      {% endif %}
     </form>
-    {% if participant.marks is not None %}
-      <div style="font-size:.7rem;color:var(--ink-3);margin-top:.2rem;">{{ participant.marks }}/100</div>
-    {% endif %}
   </td>
+
+  <!-- Actions -->
   <td>
-    <div class="d-flex flex-wrap gap-1">
-      <!-- Toggle Attendance -->
-      <button class="btn btn-sm btn-outline-primary attendance-toggle"
+    <div style="display:flex;flex-wrap:wrap;gap:.32rem;">
+
+      <!-- Attendance toggle -->
+      <button class="btn btn-icon btn-teal attendance-toggle"
               data-url="{% url 'toggle_attendance' participant.pk %}"
               title="Toggle attendance">
-        <i class="bi bi-person-check"></i>
+        <i class="bi bi-person-check-fill"></i>
       </button>
 
-      <!-- Feedback -->
-      <a class="btn btn-sm btn-outline-secondary" href="{% url 'feedback' participant.pk %}" title="Give feedback">
-        <i class="bi bi-chat-left-text"></i>
+      <!-- Feedback link -->
+      <a class="btn btn-icon btn-violet"
+         href="{% url 'feedback' participant.pk %}"
+         title="Submit feedback">
+        <i class="bi bi-chat-left-text-fill"></i>
       </a>
 
-      <!-- Certificate — only if eligible (attendance required at minimum) -->
+      <!-- Certificate — green when eligible, locked otherwise -->
       {% if participant.is_eligible %}
-        <a class="btn btn-sm btn-cert-eligible"
+        <a class="btn btn-icon btn-cert"
            href="{% url 'certificate' participant.certificate_hash %}"
-           title="Download Certificate (Eligible ✓)"
+           title="Download Certificate ✓"
            target="_blank">
-          <i class="bi bi-award-fill me-1"></i>Cert
+          <i class="bi bi-award-fill"></i>
         </a>
-      {% elif participant.attendance %}
-        <span class="btn btn-sm btn-cert-locked"
-              title="Complete feedback &amp; marks to unlock">
-          <i class="bi bi-lock-fill me-1"></i>Cert
-        </span>
       {% else %}
-        <span class="btn btn-sm btn-cert-locked"
-              title="Mark attendance first to unlock certificate">
-          <i class="bi bi-lock-fill me-1"></i>Cert
+        <span class="btn btn-icon btn-cert-locked"
+              title="{% if not participant.attendance %}Step 1: mark attendance{% elif not participant.feedback_given %}Step 2: collect feedback{% else %}Step 3: enter marks{% endif %}">
+          <i class="bi bi-lock-fill"></i>
         </span>
       {% endif %}
 
       <!-- Delete -->
-      <button class="btn btn-sm btn-outline-danger delete-student"
+      <button class="btn btn-icon btn-red delete-student"
               data-url="{% url 'delete_participant' participant.pk %}"
               title="Delete participant">
-        <i class="bi bi-trash3"></i>
+        <i class="bi bi-trash3-fill"></i>
       </button>
+
     </div>
   </td>
+
+  <!-- QR -->
   <td>
-    <img src="data:image/png;base64,{{ participant.qr_data }}"
-         alt="QR for {{ participant.name }}"
-         width="56" height="56" class="qr-thumb">
+    <div class="qr-wrap">
+      <img src="data:image/png;base64,{{ participant.qr_data }}"
+           alt="QR Code" width="52" height="52">
+    </div>
   </td>
 </tr>
 {% empty %}
 <tr>
-  <td colspan="8" style="text-align:center;padding:2rem;color:var(--ink-3);">
-    <i class="bi bi-inbox" style="font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>
-    No participants registered yet.
+  <td colspan="8">
+    <div class="empty-state">
+      <i class="bi bi-inbox-fill"></i>
+      <p>No participants registered yet.</p>
+    </div>
   </td>
 </tr>
 {% endfor %}

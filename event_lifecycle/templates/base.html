@@ -1,185 +1,54 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EventFlow — Lifecycle Manager</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <style>
-    :root {
-      --ink: #0b0f1a;
-      --ink-2: #2a3050;
-      --ink-3: #5c6585;
-      --surface: #f0f2fa;
-      --card-bg: #ffffff;
-      --border: #e4e8f5;
-      --accent: #4f46e5;
-      --accent-2: #06b6d4;
-      --accent-3: #f59e0b;
-      --success: #10b981;
-      --danger: #ef4444;
-      --gradient-hero: linear-gradient(135deg, #0b0f1a 0%, #1a2040 55%, #0e2154 100%);
-      --shadow-sm: 0 1px 3px rgba(11,15,26,.06), 0 4px 16px rgba(11,15,26,.07);
-      --shadow-md: 0 4px 24px rgba(11,15,26,.11);
-      --shadow-accent: 0 8px 32px rgba(79,70,229,.22);
-      --radius: 16px;
-      --radius-sm: 10px;
-    }
-    * { box-sizing: border-box; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--ink); min-height: 100vh; }
-
-    /* NAVBAR */
-    .topbar {
-      background: var(--gradient-hero);
-      padding: 0 2rem;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .topbar-brand {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800; font-size: 1.25rem; color: #fff;
-      text-decoration: none; display: flex; align-items: center; gap: .6rem;
-    }
-    .brand-dot {
-      width: 8px; height: 8px; background: var(--accent-2);
-      border-radius: 50%; animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity:1; transform:scale(1); }
-      50% { opacity:.5; transform:scale(.75); }
-    }
-    .topbar-nav { display:flex; align-items:center; gap:.35rem; }
-    .topbar-nav a {
-      color: rgba(255,255,255,.7); text-decoration:none; font-size:.875rem; font-weight:500;
-      padding:.4rem .9rem; border-radius:8px; transition:all .2s;
-    }
-    .topbar-nav a:hover { color:#fff; background:rgba(255,255,255,.12); }
-
-    /* CARDS */
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); transition: box-shadow .2s; }
-    .card-header-accent {
-      background: var(--gradient-hero); color:#fff;
-      padding:1rem 1.4rem; border-radius: var(--radius) var(--radius) 0 0;
-      font-family:'Syne',sans-serif; font-weight:700; font-size:.9rem;
-      display:flex; align-items:center; gap:.5rem; letter-spacing:-.1px;
-    }
-
-    /* STATS */
-    .stat-card {
-      background: var(--card-bg); border:1px solid var(--border); border-radius:var(--radius);
-      padding:1.4rem 1.5rem; box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
-      transition:transform .2s,box-shadow .2s;
-    }
-    .stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
-    .stat-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; }
-    .stat-card.s1::before { background:linear-gradient(90deg,var(--accent),var(--accent-2)); }
-    .stat-card.s2::before { background:linear-gradient(90deg,var(--accent-2),var(--success)); }
-    .stat-card.s3::before { background:linear-gradient(90deg,var(--success),var(--accent-3)); }
-    .stat-card.s4::before { background:linear-gradient(90deg,var(--accent-3),var(--danger)); }
-    .stat-icon { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:.85rem; }
-    .stat-card.s1 .stat-icon { background:rgba(79,70,229,.1);color:var(--accent); }
-    .stat-card.s2 .stat-icon { background:rgba(6,182,212,.1);color:var(--accent-2); }
-    .stat-card.s3 .stat-icon { background:rgba(16,185,129,.1);color:var(--success); }
-    .stat-card.s4 .stat-icon { background:rgba(245,158,11,.1);color:var(--accent-3); }
-    .stat-value { font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--ink);line-height:1;margin-bottom:.2rem; }
-    .stat-label { font-size:.75rem;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.5px; }
-
-    /* FORMS */
-    .form-label { font-size:.75rem;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.3rem; }
-    .form-control,.form-select {
-      border-radius:var(--radius-sm);border:1.5px solid var(--border);
-      font-size:.875rem;padding:.5rem .85rem;color:var(--ink);
-      transition:border-color .2s,box-shadow .2s;background:#fafbff;
-    }
-    .form-control:focus,.form-select:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.12);background:#fff; }
-
-    /* BUTTONS */
-    .btn { font-weight:600;font-size:.8rem;border-radius:var(--radius-sm);border:none;padding:.45rem .9rem;transition:all .15s;letter-spacing:.1px; }
-    .btn-primary { background:linear-gradient(135deg,var(--accent),#6d5ff5);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3); }
-    .btn-primary:hover { filter:brightness(1.1);box-shadow:var(--shadow-accent);transform:translateY(-1px);color:#fff; }
-    .btn-dark { background:var(--gradient-hero);color:#fff; }
-    .btn-dark:hover { opacity:.9;color:#fff; }
-    .btn-success { background:var(--success);color:#fff; }
-    .btn-danger { background:var(--danger);color:#fff; }
-    .btn-warning { background:var(--accent-3);color:#fff; }
-    .btn-outline-primary { border:1.5px solid var(--accent);color:var(--accent);background:transparent; }
-    .btn-outline-primary:hover { background:var(--accent);color:#fff; }
-    .btn-outline-danger { border:1.5px solid var(--danger);color:var(--danger);background:transparent; }
-    .btn-outline-danger:hover { background:var(--danger);color:#fff; }
-    .btn-outline-secondary { border:1.5px solid var(--border);color:var(--ink-3);background:transparent; }
-    .btn-outline-secondary:hover { border-color:var(--ink-2);color:var(--ink-2); }
-
-    /* TABLE */
-    .table { font-size:.84rem; }
-    .table thead th { background:#f1f4ff;color:var(--ink-2);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;padding:.85rem 1rem;border:none;white-space:nowrap; }
-    .table tbody td { padding:.85rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle; }
-    .table tbody tr:hover { background:#f8f9ff; }
-    .table tbody tr:last-child td { border-bottom:none; }
-
-    /* BADGES */
-    .badge-yes { display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;background:rgba(16,185,129,.12);color:#059669; }
-    .badge-no { display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;background:rgba(239,68,68,.1);color:#dc2626; }
-
-    /* EVENTS */
-    .event-item { padding:.8rem;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.45rem;display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;transition:box-shadow .15s;background:#fff; }
-    .event-item:hover { box-shadow:var(--shadow-sm); }
-    .event-dot { width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0;margin-top:5px; }
-
-    /* CERT BUTTON */
-    .btn-cert-eligible { background:linear-gradient(135deg,var(--success),#059669);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3); }
-    .btn-cert-eligible:hover { transform:translateY(-1px);box-shadow:0 4px 16px rgba(16,185,129,.4);color:#fff; }
-    .btn-cert-locked { background:var(--border);color:var(--ink-3);cursor:not-allowed;pointer-events:none; }
-
-    /* TOAST */
-    #toast-container { position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem; }
-    .toast-msg { background:var(--ink);color:#fff;padding:.75rem 1.2rem;border-radius:var(--radius-sm);font-size:.85rem;font-weight:500;box-shadow:var(--shadow-md);animation:slideIn .25s ease;display:flex;align-items:center;gap:.5rem; }
-    .toast-msg.success { background:#064e3b;border-left:3px solid var(--success); }
-    .toast-msg.error { background:#7f1d1d;border-left:3px solid var(--danger); }
-    @keyframes slideIn { from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);} }
-
-    /* QR */
-    .qr-thumb { border-radius:8px;border:2px solid var(--border);padding:2px; }
-
-    /* SECTION TITLE */
-    .section-title { font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:.5rem; }
-
-    /* PAGE WRAPPER */
-    .page-wrapper { max-width:1360px;margin:0 auto;padding:2rem 1.5rem 4rem; }
-
-    ::-webkit-scrollbar{width:6px;height:6px;}
-    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
-  </style>
+  <link href="{% static 'css/eventflow.css' %}" rel="stylesheet">
 </head>
 <body>
+
 <nav class="topbar">
   <a class="topbar-brand" href="{% url 'dashboard' %}">
-    <span class="brand-dot"></span>EventFlow
+    <span class="brand-logo">⚡</span>
+    EventFlow
   </a>
-  <div class="topbar-nav">
-    <a href="{% url 'dashboard' %}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-    <a href="{% url 'register' %}"><i class="bi bi-person-plus-fill"></i> Register</a>
+  <div class="topbar-right">
+    <span class="live-pill"><span class="live-dot"></span>LIVE</span>
+    <nav class="topbar-nav">
+      <a href="{% url 'dashboard' %}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+      <a href="{% url 'register' %}"><i class="bi bi-person-plus-fill"></i> Register</a>
+    </nav>
   </div>
 </nav>
+
 <div class="page-wrapper">
   {% block content %}{% endblock %}
 </div>
+
 <div id="toast-container"></div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-function showToast(msg, type='success') {
-  const t = document.createElement('div');
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { success: 'check-circle-fill', error: 'exclamation-triangle-fill', info: 'info-circle-fill' };
+  var t = document.createElement('div');
   t.className = 'toast-msg ' + type;
-  t.innerHTML = '<i class="bi bi-' + (type==='success'?'check-circle-fill':'exclamation-triangle-fill') + '"></i>' + msg;
+  t.innerHTML = '<i class="bi bi-' + (icons[type] || 'info-circle-fill') + '"></i><span>' + msg + '</span>';
   document.getElementById('toast-container').appendChild(t);
-  setTimeout(() => t.remove(), 3500);
+  setTimeout(function () {
+    t.style.transition = 'all .3s';
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(16px)';
+    setTimeout(function () { t.remove(); }, 320);
+  }, 3500);
 }
 </script>
+
 {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -12,7 +12,9 @@ from .utils import generate_certificate_pdf, generate_qr_data
 
 
 def _send_registration_email(participant, request):
-    certificate_url = request.build_absolute_uri(reverse('certificate', args=[participant.certificate_hash]))
+    certificate_url = request.build_absolute_uri(
+        reverse('certificate', args=[participant.certificate_hash])
+    )
     send_mail(
         subject='Event Registration Confirmation',
         message=(
@@ -40,14 +42,16 @@ def register(request):
 
 
 def dashboard(request):
-    participants = Participant.objects.all()
+    participants = Participant.objects.select_related('event').all()
     events = Event.objects.all()
     participant_form = RegistrationForm()
     event_form = EventForm()
 
     for participant in participants:
         participant.qr_data = generate_qr_data(
-            request.build_absolute_uri(reverse('certificate', args=[participant.certificate_hash]))
+            request.build_absolute_uri(
+                reverse('certificate', args=[participant.certificate_hash])
+            )
         )
 
     context = {
@@ -61,13 +65,25 @@ def dashboard(request):
 
 @require_POST
 def update_marks(request, pk):
+    """
+    FIX: form.save(update_fields=[...]) is not valid on ModelForm.
+    Correct pattern: form.save(commit=False) -> instance.save(update_fields=[...])
+    """
     participant = get_object_or_404(Participant, pk=pk)
     form = MarksForm(request.POST, instance=participant)
     if not form.is_valid():
         return JsonResponse({'errors': form.errors}, status=400)
 
-    form.save(update_fields=['marks'])
-    return JsonResponse({'message': 'Marks updated successfully.'})
+    # commit=False gives us the instance without hitting the DB
+    instance = form.save(commit=False)
+    # update_fields=['marks'] means only the marks column is written,
+    # skipping the photo-reading logic in the model's save() override
+    instance.save(update_fields=['marks'])
+    return JsonResponse({
+        'message': 'Marks updated successfully.',
+        'marks': instance.marks,
+        'eligible': instance.is_eligible(),
+    })
 
 
 @require_POST
@@ -88,17 +104,15 @@ def add_event(request):
         return JsonResponse({'errors': form.errors}, status=400)
 
     event = form.save()
-    return JsonResponse(
-        {
-            'message': 'Event added successfully.',
-            'event': {
-                'id': event.id,
-                'title': event.title,
-                'event_date': str(event.event_date),
-                'description': event.description or 'No description',
-            },
-        }
-    )
+    return JsonResponse({
+        'message': 'Event added successfully.',
+        'event': {
+            'id': event.id,
+            'title': event.title,
+            'event_date': str(event.event_date),
+            'description': event.description or 'No description',
+        },
+    })
 
 
 @require_POST
@@ -123,7 +137,10 @@ def toggle_attendance(request, pk):
     participant = get_object_or_404(Participant, pk=pk)
     participant.attendance = not participant.attendance
     participant.save(update_fields=['attendance'])
-    return JsonResponse({'attendance': participant.attendance})
+    return JsonResponse({
+        'attendance': participant.attendance,
+        'eligible': participant.is_eligible(),
+    })
 
 
 def feedback(request, pk):
@@ -143,31 +160,43 @@ def feedback(request, pk):
 
 
 def dashboard_stats(request):
-    return JsonResponse(
-        {
-            'participants': Participant.objects.count(),
-            'events': Event.objects.count(),
-            'attended': Participant.objects.filter(attendance=True).count(),
-            'feedback': Participant.objects.filter(feedback_given=True).count(),
-        }
-    )
+    return JsonResponse({
+        'participants': Participant.objects.count(),
+        'events': Event.objects.count(),
+        'attended': Participant.objects.filter(attendance=True).count(),
+        'feedback': Participant.objects.filter(feedback_given=True).count(),
+    })
 
 
 def participant_rows(request):
-    participants = Participant.objects.all()
+    participants = Participant.objects.select_related('event').all()
     for participant in participants:
         participant.qr_data = generate_qr_data(
-            request.build_absolute_uri(reverse('certificate', args=[participant.certificate_hash]))
+            request.build_absolute_uri(
+                reverse('certificate', args=[participant.certificate_hash])
+            )
         )
-    html = render_to_string('events/participant_rows.html', {'participants': participants}, request=request)
+    html = render_to_string(
+        'events/participant_rows.html',
+        {'participants': participants},
+        request=request,
+    )
     return JsonResponse({'html': html})
 
 
 def certificate(request, hash):
     participant = get_object_or_404(Participant, certificate_hash=hash)
     if not participant.is_eligible():
-        return HttpResponseForbidden('Certificate is not available. Eligibility requirements are not met.')
+        return HttpResponseForbidden(
+            'Certificate not available yet. '
+            'Requirements: attendance marked, feedback submitted, and marks entered.'
+        )
 
     pdf_buffer = generate_certificate_pdf(participant)
     filename = f'certificate_{participant.name.replace(" ", "_")}.pdf'
-    return FileResponse(pdf_buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+    return FileResponse(
+        pdf_buffer,
+        as_attachment=True,
+        filename=filename,
+        content_type='application/pdf',
+    )

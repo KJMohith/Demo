@@ -20,7 +20,9 @@ class Event(models.Model):
 
 
 class Participant(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants', null=True)
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE, related_name='participants', null=True
+    )
     name = models.CharField(max_length=150)
     email = models.EmailField()
     transaction_id = models.CharField(max_length=100, unique=True)
@@ -51,11 +53,23 @@ class Participant(models.Model):
         return f'{self.name} - {self.event} ({self.transaction_id})'
 
     def save(self, *args, **kwargs):
-        if self.photo and hasattr(self.photo, 'read'):
+        # FIX: Only read the photo file when it is a fresh upload (an InMemoryUploadedFile
+        # or TemporaryUploadedFile), not on every partial save (e.g. update_fields=['marks']).
+        # Previously this ran unconditionally, wasting IO and risking errors on partial saves.
+        update_fields = kwargs.get('update_fields')
+        photo_is_new_upload = (
+            self.photo
+            and hasattr(self.photo, 'file')
+            and hasattr(self.photo.file, 'read')
+            # FieldFile wraps an existing file on disk; InMemoryUploadedFile has content_type
+            and hasattr(self.photo, 'content_type')
+        )
+        if photo_is_new_upload and (update_fields is None or 'photo' in update_fields):
             self.photo.seek(0)
             self.transaction_photo_data = self.photo.read()
             self.photo.seek(0)
         super().save(*args, **kwargs)
 
     def is_eligible(self):
-        return self.attendance and self.feedback_given and self.marks is not None
+        """Participant can download a certificate when all three conditions are met."""
+        return bool(self.attendance and self.feedback_given and self.marks is not None)

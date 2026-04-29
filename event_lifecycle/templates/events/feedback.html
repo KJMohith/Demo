@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<div style="max-width:580px;margin:0 auto;">
+<div style="max-width:500px;margin:0 auto;">
   <div class="page-header">
-    <h1 class="page-title">Register Participant</h1>
-    <p class="page-subtitle">Add a new participant to an upcoming event</p>
+    <h1 class="page-title">Submit Feedback</h1>
+    <p class="page-subtitle">For <strong style="color:var(--teal);">{{ participant.name }}</strong></p>
   </div>
   <div class="glass-card">
     <div class="card-head">
-      <span class="card-head-title"><i class="bi bi-person-plus-fill"></i> Registration Form</span>
+      <span class="card-head-title"><i class="bi bi-chat-left-text-fill"></i> Feedback Form</span>
     </div>
     <div class="card-body-inner">
-      <form method="post" enctype="multipart/form-data">
+      <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <div style="margin-top:1.25rem;">
           <button class="btn btn-primary btn-block" type="submit">
-            <i class="bi bi-check-circle-fill"></i> Register Participant
+            <i class="bi bi-send-fill"></i> Submit Feedback
           </button>
         </div>
       </form>
